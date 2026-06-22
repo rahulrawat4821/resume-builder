@@ -11,7 +11,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.resumebuilder.backend.security.JwtAuthFilter;
 
 @Configuration
-public class SecurityConfig {
+public class SecurityConfig { 
 
     private final JwtAuthFilter jwtAuthFilter;
 

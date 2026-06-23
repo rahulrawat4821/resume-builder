@@ -20,82 +20,42 @@ public class User {
     private String otp;
     private LocalDateTime otpExpiry;
 
-    // Default Constructor
-    public User() {
-    }
+    // Profile fields
+    private String phone;
+    private String jobTitle;
+    private String address;
+    private String profilePicture;
+    private String plan = "FREE";
+    private LocalDateTime planExpiry;
 
-    // Parameterized Constructor
-    public User(String id, String name, String email, String password,
-                boolean verified, String otp, LocalDateTime otpExpiry) {
-        this.id = id;
-        this.name = name;
-        this.email = email;
-        this.password = password;
-        this.verified = verified;
-        this.otp = otp;
-        this.otpExpiry = otpExpiry;
-    }
+    // Constructors
+    public User() {}
 
-    // Getter and Setter for id
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    // Getter and Setter for name
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    // Getter and Setter for email
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    // Getter and Setter for password
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    // Getter and Setter for verified
-    public boolean isVerified() {
-        return verified;
-    }
-
-    public void setVerified(boolean verified) {
-        this.verified = verified;
-    }
-
-    // Getter and Setter for otp
-    public String getOtp() {
-        return otp;
-    }
-
-    public void setOtp(String otp) {
-        this.otp = otp;
-    }
-
-    // Getter and Setter for otpExpiry
-    public LocalDateTime getOtpExpiry() {
-        return otpExpiry;
-    }
-
-    public void setOtpExpiry(LocalDateTime otpExpiry) {
-        this.otpExpiry = otpExpiry;
-    }
+    // Getters and Setters
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+    public boolean isVerified() { return verified; }
+    public void setVerified(boolean verified) { this.verified = verified; }
+    public String getOtp() { return otp; }
+    public void setOtp(String otp) { this.otp = otp; }
+    public LocalDateTime getOtpExpiry() { return otpExpiry; }
+    public void setOtpExpiry(LocalDateTime otpExpiry) { this.otpExpiry = otpExpiry; }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+    public String getJobTitle() { return jobTitle; }
+    public void setJobTitle(String jobTitle) { this.jobTitle = jobTitle; }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+    public String getProfilePicture() { return profilePicture; }
+    public void setProfilePicture(String profilePicture) { this.profilePicture = profilePicture; }
+    public String getPlan() { return plan; }
+    public void setPlan(String plan) { this.plan = plan; }
+    public LocalDateTime getPlanExpiry() { return planExpiry; }
+    public void setPlanExpiry(LocalDateTime planExpiry) { this.planExpiry = planExpiry; }
 }

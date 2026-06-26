@@ -1,75 +1,40 @@
 @import "tailwindcss";
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  transition: all 0.2s ease;
+/* Force legacy color format for html2pdf compatibility */
+@theme {
+  --color-*: initial;
 }
 
-html,
-body,
-#root {
-  min-height: 100%;
+* {
+  transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 body {
-  color: #f8fafc;
-  font-family: Inter, sans-serif;
-  background:
-    radial-gradient(circle at 15% 20%, rgba(124, 58, 237, 0.22), transparent 28%),
-    radial-gradient(circle at 85% 80%, rgba(37, 99, 235, 0.18), transparent 30%),
-    #060816;
+  background: #060816;
+  color: white;
+  font-family: system-ui, -apple-system, sans-serif;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 7px;
-}
-
-::-webkit-scrollbar-track {
-  background: #0b1120;
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #7c3aed, #2563eb);
-  border-radius: 20px;
-}
-
-/* Button animation */
-button:hover {
-  transform: translateY(-1px);
-}
-
-button:active {
-  transform: translateY(0px);
-}
-
-input:focus {
-  transform: scale(1.01);
-  outline: none;
-}
-
-/* Utility classes */
 .glass {
   background: rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.glow {
-  box-shadow: 0 12px 40px rgba(124, 58, 237, 0.25);
 }
 
 .gradient-primary {
-  background: linear-gradient(135deg, #7c3aed, #2563eb);
+  background: linear-gradient(135deg, #7C3AED, #2563EB);
+  color: white;
+}
+
+.glow {
+  box-shadow: 0 0 24px rgba(124, 58, 237, 0.15);
+}
+
+.glow:hover {
+  box-shadow: 0 0 36px rgba(124, 58, 237, 0.3);
 }
 
 .text-muted {
-  color: #94a3b8;
-}
-
-.border-soft {
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #64748B;
 }

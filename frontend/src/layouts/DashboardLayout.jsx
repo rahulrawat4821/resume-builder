@@ -6,7 +6,7 @@ const DashboardLayout = ({ children }) => {
   const { logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const handleLogout = () => {
     logout()
@@ -14,118 +14,132 @@ const DashboardLayout = ({ children }) => {
   }
 
   const navItems = [
-    { path: '/dashboard', icon: '◫', label: 'Dashboard' },
-    { path: '/profile', icon: '◉', label: 'Profile' },
-    { path: '/pricing', icon: '✦', label: 'Pricing' },
+    { path: '/dashboard', icon: '⊞', label: 'Dashboard' },
+    { path: '/profile', icon: '◯', label: 'Profile' },
+    { path: '/pricing', icon: '★', label: 'Pricing' },
   ]
 
   return (
-    <div className="min-h-screen bg-[#060816] text-white relative overflow-hidden">
+    <div className="min-h-screen text-white relative overflow-hidden" style={{ background: '#060816' }}>
+
       {/* Background glow */}
-      <div className="absolute top-10 left-20 w-72 h-72 rounded-full bg-purple-600 opacity-10 blur-[140px]" />
-      <div className="absolute bottom-10 right-20 w-72 h-72 rounded-full bg-blue-600 opacity-10 blur-[140px]" />
+      <div className="absolute top-10 left-20 w-72 h-72 rounded-full opacity-10 blur-[140px] pointer-events-none" style={{ background: '#7C3AED' }} />
+      <div className="absolute bottom-10 right-20 w-72 h-72 rounded-full opacity-10 blur-[140px] pointer-events-none" style={{ background: '#2563EB' }} />
 
       {/* Navbar */}
       <nav
-        className="fixed top-0 left-0 right-0 z-50 h-16 px-6 flex items-center justify-between"
+        className="fixed top-0 left-0 right-0 z-50 h-16 px-4 md:px-6 flex items-center justify-between"
         style={{
-          background: 'rgba(6,8,22,0.75)',
+          background: 'rgba(6,8,22,0.85)',
           backdropFilter: 'blur(18px)',
           borderBottom: '1px solid rgba(255,255,255,0.08)',
         }}
       >
-        <div className="flex items-center gap-4">
+        {/* Left */}
+        <div className="flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-xl text-gray-300 hover:text-white"
+            className="text-xl text-gray-400 hover:text-white transition p-1"
+            aria-label="Toggle sidebar"
           >
             ☰
           </button>
-
-          <Link to="/dashboard" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl gradient-primary glow flex items-center justify-center">
-              <span className="font-bold text-white">R</span>
+          <Link to="/dashboard" className="flex items-center gap-2">
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-white"
+              style={{ background: 'linear-gradient(135deg, #7C3AED, #2563EB)' }}
+            >
+              R
             </div>
-
-            <span className="font-bold text-lg">Resume Builder</span>
+            <span className="font-bold text-base hidden sm:block">Resume Builder</span>
           </Link>
         </div>
 
-        <div className="flex items-center gap-3">
-          <span className="px-4 py-1 rounded-full text-xs font-medium bg-purple-500/10 text-purple-300 border border-purple-500/20">
+        {/* Right */}
+        <div className="flex items-center gap-2 md:gap-3">
+          <span
+            className="px-3 py-1 rounded-full text-xs font-medium hidden sm:block"
+            style={{ background: 'rgba(124,58,237,0.15)', color: '#a78bfa', border: '1px solid rgba(124,58,237,0.3)' }}
+          >
             Free Plan
           </span>
-
           <button
             onClick={() => navigate('/pricing')}
-            className="gradient-primary px-4 py-2 rounded-xl text-sm font-semibold glow"
+            className="px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all"
+            style={{ background: 'linear-gradient(135deg, #7C3AED, #2563EB)' }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
           >
             Upgrade
           </button>
-
-          <div className="w-10 h-10 rounded-full gradient-primary glow flex items-center justify-center font-semibold">
+          <div
+            className="w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm"
+            style={{ background: 'linear-gradient(135deg, #7C3AED, #2563EB)' }}
+          >
             RR
           </div>
         </div>
       </nav>
 
+      {/* Sidebar overlay for mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       <div className="flex pt-16 relative z-10">
         {/* Sidebar */}
-        {sidebarOpen && (
-          <aside
-            className="w-64 fixed left-0 bottom-0 px-4 py-5 flex flex-col"
-            style={{
-              top: '64px',
-              background: 'rgba(255,255,255,0.03)',
-              backdropFilter: 'blur(18px)',
-              borderRight: '1px solid rgba(255,255,255,0.08)',
-            }}
+        <aside
+          className="fixed left-0 bottom-0 z-40 flex flex-col px-3 py-5 transition-all duration-300"
+          style={{
+            top: '64px',
+            width: sidebarOpen ? '240px' : '0px',
+            overflow: 'hidden',
+            background: 'rgba(255,255,255,0.03)',
+            backdropFilter: 'blur(18px)',
+            borderRight: sidebarOpen ? '1px solid rgba(255,255,255,0.08)' : 'none',
+          }}
+        >
+          <div className="flex flex-col gap-1 flex-1 min-w-[210px]">
+            {navItems.map((item) => {
+              const active = location.pathname === item.path
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setSidebarOpen(false)}
+                  className="px-4 py-3 rounded-2xl flex items-center gap-3 text-sm font-medium transition-all whitespace-nowrap"
+                  style={active
+                    ? { background: 'linear-gradient(135deg,#7C3AED,#2563EB)', color: 'white', boxShadow: '0 8px 24px rgba(124,58,237,0.25)' }
+                    : { color: '#94A3B8' }
+                  }
+                  onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
+                  onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
+                >
+                  <span>{item.icon}</span>
+                  {item.label}
+                </Link>
+              )
+            })}
+          </div>
+
+          <button
+            onClick={handleLogout}
+            className="mt-4 px-4 py-3 rounded-2xl flex items-center gap-3 text-sm font-medium transition-all whitespace-nowrap"
+            style={{ color: '#f87171' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(248,113,113,0.1)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
           >
-            <div className="flex flex-col gap-2 flex-1">
-              {navItems.map((item) => {
-                const active = location.pathname === item.path
-
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className="px-4 py-3 rounded-2xl flex items-center gap-3 text-sm font-medium"
-                    style={
-                      active
-                        ? {
-                            background:
-                              'linear-gradient(135deg,#7C3AED,#2563EB)',
-                            boxShadow:
-                              '0 12px 30px rgba(124,58,237,.25)',
-                          }
-                        : {
-                            color: '#94A3B8',
-                          }
-                    }
-                  >
-                    <span>{item.icon}</span>
-                    {item.label}
-                  </Link>
-                )
-              })}
-            </div>
-
-            <button
-              onClick={handleLogout}
-              className="mt-4 px-4 py-3 rounded-2xl flex items-center gap-3 text-red-300 hover:bg-red-500/10"
-            >
-              <span>↩</span>
-              Logout
-            </button>
-          </aside>
-        )}
+            <span>↩</span> Logout
+          </button>
+        </aside>
 
         {/* Main Content */}
         <main
-          className="flex-1 p-6 md:p-8"
-          style={{
-            marginLeft: sidebarOpen ? '256px' : '0',
-          }}
+          className="flex-1 min-h-screen transition-all duration-300 p-4 md:p-8"
+          style={{ marginLeft: sidebarOpen ? '240px' : '0px' }}
         >
           {children}
         </main>

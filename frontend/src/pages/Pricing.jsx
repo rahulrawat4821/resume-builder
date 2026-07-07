@@ -1,126 +1,158 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import DashboardLayout from '../layouts/DashboardLayout'
+import api from '../services/api'
+
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true)
+      return
+    }
+    const script = document.createElement('script')
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    script.onload = () => resolve(true)
+    script.onerror = () => resolve(false)
+    document.body.appendChild(script)
+  })
+}
 
 const Pricing = () => {
   const navigate = useNavigate()
+  const [loading, setLoading] = useState(false)
+
+  const handleUpgrade = async () => {
+    setLoading(true)
+    try {
+      // Step 1 — Load Razorpay script
+      const loaded = await loadRazorpayScript()
+      if (!loaded) {
+        alert('Failed to load Razorpay. Check your internet connection.')
+        setLoading(false)
+        return
+      }
+
+      // Step 2 — Create order from backend
+      const res = await api.post('/payment/create-order')
+      const { orderId, amount, currency, keyId } = res.data
+
+      // Step 3 — Open Razorpay checkout
+      const options = {
+        key: keyId,
+        amount: amount,
+        currency: currency,
+        name: 'Resume Builder',
+        description: 'Premium Plan - 1 Month',
+        order_id: orderId,
+        handler: async (response) => {
+          try {
+            await api.post('/payment/verify', {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            })
+            alert('🎉 Payment successful! You are now Premium!')
+            navigate('/dashboard')
+          } catch (err) {
+            alert('Payment verification failed!')
+          }
+        },
+        prefill: {
+          name: 'Rahul Rawat',
+          email: 'rahul@gmail.com',
+        },
+        theme: { color: '#7C3AED' },
+        modal: { ondismiss: () => setLoading(false) }
+      }
+
+      const rzp = new window.Razorpay(options)
+      rzp.open()
+
+    } catch (err) {
+      console.error(err)
+      alert(err.response?.data?.message || 'Payment failed!')
+      setLoading(false)
+    }
+  }
 
   const freeFeatures = [
-    { text: '1 resume only', ok: true },
-    { text: '1 basic theme', ok: true },
-    { text: 'PDF download', ok: false },
+    { text: '5 resumes total', ok: true },
+    { text: '3 themes', ok: true },
+    { text: 'PDF download', ok: true },
+    { text: 'Unlimited resumes', ok: false },
     { text: 'Profile photo', ok: false },
-    { text: 'Multiple themes', ok: false },
     { text: 'Priority support', ok: false },
   ]
 
   const premiumFeatures = [
     { text: 'Unlimited resumes', ok: true },
-    { text: '10+ themes', ok: true },
+    { text: 'All themes', ok: true },
     { text: 'PDF download', ok: true },
-    { text: 'Profile photo', ok: true },
+    { text: 'Profile photo upload', ok: true },
     { text: 'Custom sections', ok: true },
     { text: 'Priority support', ok: true },
   ]
 
   return (
     <DashboardLayout>
-      <div className="relative z-10">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
-            Choose Your Plan
-          </h1>
-
-          <p className="text-muted text-lg">
-            Upgrade to unlock premium features
-          </p>
+      <div className="p-8">
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-bold text-white mb-3">Choose your plan</h1>
+          <p style={{ color: '#4B5563' }}>Upgrade to unlock all features</p>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           {/* Free Plan */}
-          <div className="glass rounded-3xl p-8 border border-white/10">
-            <h2 className="text-2xl font-bold text-white mb-2">Free</h2>
-
-            <div className="mb-2">
-              <span className="text-5xl font-bold text-white">₹0</span>
-            </div>
-
-            <p className="text-muted mb-8">Forever free</p>
-
-            <div className="space-y-4 mb-8">
-              {freeFeatures.map((feature, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <span
-                    className={`text-lg ${
-                      feature.ok ? 'text-green-400' : 'text-gray-600'
-                    }`}
-                  >
-                    {feature.ok ? '✓' : '✕'}
-                  </span>
-
-                  <span
-                    className={`${
-                      feature.ok ? 'text-gray-300' : 'text-gray-500'
-                    }`}
-                  >
-                    {feature.text}
-                  </span>
+          <div className="rounded-2xl p-8 glass">
+            <h2 className="text-lg font-bold text-white mb-1">Free</h2>
+            <div className="text-4xl font-bold text-white mb-1">₹0</div>
+            <p className="text-sm mb-6" style={{ color: '#4B5563' }}>Forever free</p>
+            <div className="flex flex-col gap-3 mb-8">
+              {freeFeatures.map((f, i) => (
+                <div key={i} className="flex items-center gap-3 text-sm">
+                  <span style={{ color: f.ok ? '#4ADE80' : '#374151' }}>{f.ok ? '✓' : '✕'}</span>
+                  <span style={{ color: f.ok ? '#94a3b8' : '#374151' }}>{f.text}</span>
                 </div>
               ))}
             </div>
-
-            <button className="w-full py-3 rounded-2xl bg-white/5 border border-white/10 text-gray-400 font-medium">
-              Current Plan
+            <button
+              className="w-full py-3 rounded-xl text-sm font-medium"
+              style={{ border: '1px solid rgba(255,255,255,0.1)', color: '#4B5563', background: 'transparent' }}
+            >
+              Current plan
             </button>
           </div>
 
-          {/* Premium */}
-          <div className="glass glow rounded-3xl p-8 border border-purple-500/30 relative overflow-hidden">
-            {/* Badge */}
-            <div className="absolute top-4 right-4 gradient-primary px-4 py-1 rounded-full text-xs font-semibold text-white">
+          {/* Premium Plan */}
+          <div className="rounded-2xl p-8 relative" style={{ background: 'rgba(124,58,237,0.1)', border: '2px solid #7C3AED' }}>
+            <div
+              className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs px-4 py-1 rounded-full font-medium"
+              style={{ background: 'linear-gradient(135deg,#7C3AED,#2563EB)', color: 'white' }}
+            >
               Most Popular
             </div>
-
-            {/* Background glow inside card */}
-            <div className="absolute top-0 right-0 w-40 h-40 bg-purple-500 opacity-20 blur-[80px]" />
-
-            <div className="relative z-10">
-              <h2 className="text-2xl font-bold text-white mb-2">Premium</h2>
-
-              <div className="mb-2">
-                <span className="text-5xl font-bold text-white">₹199</span>
-                <span className="text-muted ml-2">/month</span>
-              </div>
-
-              <p className="text-purple-300 mb-8">
-                Best for serious job seekers
-              </p>
-
-              <div className="space-y-4 mb-8">
-                {premiumFeatures.map((feature, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <span className="text-green-400 text-lg">✓</span>
-                    <span className="text-gray-300">{feature.text}</span>
-                  </div>
-                ))}
-              </div>
-
-              <button
-                onClick={() => navigate('/payment')}
-                className="w-full py-3 rounded-2xl gradient-primary glow font-semibold text-white"
-              >
-                Upgrade Now
-              </button>
+            <h2 className="text-lg font-bold text-white mb-1">Premium</h2>
+            <div className="text-4xl font-bold text-white mb-1">₹199</div>
+            <p className="text-sm mb-6" style={{ color: '#4B5563' }}>per month</p>
+            <div className="flex flex-col gap-3 mb-8">
+              {premiumFeatures.map((f, i) => (
+                <div key={i} className="flex items-center gap-3 text-sm">
+                  <span style={{ color: '#4ADE80' }}>✓</span>
+                  <span style={{ color: '#94a3b8' }}>{f.text}</span>
+                </div>
+              ))}
             </div>
+            <button
+              onClick={handleUpgrade}
+              disabled={loading}
+              className="w-full py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-60"
+              style={{ background: 'linear-gradient(135deg,#7C3AED,#2563EB)', color: 'white' }}
+              onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+            >
+              {loading ? '⏳ Processing...' : '🚀 Upgrade Now — ₹199/month'}
+            </button>
           </div>
-        </div>
-
-        {/* Bottom CTA */}
-        <div className="mt-12 text-center">
-          <p className="text-muted">
-            Need help deciding? Contact support anytime.
-          </p>
         </div>
       </div>
     </DashboardLayout>

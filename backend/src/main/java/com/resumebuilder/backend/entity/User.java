@@ -27,6 +27,7 @@ public class User {
     private String profilePicture;
     private String plan = "FREE";
     private LocalDateTime planExpiry;
+    private int resumesCreated = 0;
 
     // Constructors
     public User() {}
@@ -58,4 +59,6 @@ public class User {
     public void setPlan(String plan) { this.plan = plan; }
     public LocalDateTime getPlanExpiry() { return planExpiry; }
     public void setPlanExpiry(LocalDateTime planExpiry) { this.planExpiry = planExpiry; }
+    public int getResumesCreated() { return resumesCreated; }
+public void setResumesCreated(int resumesCreated) { this.resumesCreated = resumesCreated; } 
 }

@@ -22,18 +22,19 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
-    private ProfileResponse toProfileResponse(User user) {
-        return new ProfileResponse(
-                user.getId(),
-                user.getName(),
-                user.getEmail(),
-                user.getPhone(),
-                user.getJobTitle(),
-                user.getAddress(),
-                user.getProfilePicture(),
-                user.getPlan()
-        );
-    }
+  private ProfileResponse toProfileResponse(User user) {
+    return new ProfileResponse(
+            user.getId(),
+            user.getName(),
+            user.getEmail(),
+            user.getPhone(),
+            user.getJobTitle(),
+            user.getAddress(),
+            user.getProfilePicture(),
+            user.getPlan(),
+            user.getResumesCreated()
+    );
+}
 
     @Override
     public ProfileResponse getProfile(String email) {

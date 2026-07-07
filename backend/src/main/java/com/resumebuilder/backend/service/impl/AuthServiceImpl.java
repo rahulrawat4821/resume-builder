@@ -108,5 +108,24 @@ public AuthResponse login(LoginRequest request) {
     return new AuthResponse("Login successful!", token);
   }
 
+  @Override
+public AuthResponse resendOtp(String email) {
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+    if (user.isVerified()) {
+        throw new RuntimeException("Email already verified");
+    }
+
+    String otp = generateOtp();
+    user.setOtp(otp);
+    user.setOtpExpiry(LocalDateTime.now().plusMinutes(5));
+    userRepository.save(user);
+
+    emailService.sendOtpEmail(email, otp);
+
+    return new AuthResponse("OTP resent successfully!");
+}
+
 
 }

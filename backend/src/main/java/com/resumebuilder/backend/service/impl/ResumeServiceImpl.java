@@ -27,14 +27,27 @@ public class ResumeServiceImpl implements ResumeService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
-    @Override
-    public Resume createResume(Resume resume, String email) {
-        User user = getUser(email);
-        resume.setUserId(user.getId());
-        resume.setCreatedAt(LocalDateTime.now());
-        resume.setUpdatedAt(LocalDateTime.now());
-        return resumeRepository.save(resume);
+  @Override
+public Resume createResume(Resume resume, String email) {
+    User user = getUser(email);
+
+    // ✅ Permanent limit — tracks total ever created
+    if ("FREE".equals(user.getPlan())) {
+        if (user.getResumesCreated() >= 5) {
+            throw new RuntimeException("Free plan allows only 5 resumes. Upgrade to Premium!");
+        }
     }
+
+    resume.setUserId(user.getId());
+    resume.setCreatedAt(LocalDateTime.now());
+    resume.setUpdatedAt(LocalDateTime.now());
+
+    // ✅ Increment permanent count
+    user.setResumesCreated(user.getResumesCreated() + 1);
+    userRepository.save(user);
+
+    return resumeRepository.save(resume);
+}
 
     @Override
     public List<Resume> getAllResumes(String email) {
@@ -53,30 +66,29 @@ public class ResumeServiceImpl implements ResumeService {
         return resume;
     }
 
-    
-@Override
-public Resume updateResume(String id, Resume updatedResume, String email) {
-    Resume existing = getResumeById(id, email);
-    existing.setTitle(updatedResume.getTitle());
-    existing.setFullName(updatedResume.getFullName());
-    existing.setEmail(updatedResume.getEmail());
-    existing.setPhone(updatedResume.getPhone());
-    existing.setAddress(updatedResume.getAddress());
-    existing.setLinkedin(updatedResume.getLinkedin());
-    existing.setGithub(updatedResume.getGithub());
-    existing.setYoutube(updatedResume.getYoutube());
-    existing.setWebsite(updatedResume.getWebsite());
-    existing.setJobTitle(updatedResume.getJobTitle());
-    existing.setSummary(updatedResume.getSummary());
-    existing.setEducation(updatedResume.getEducation());
-    existing.setExperience(updatedResume.getExperience());
-    existing.setProjects(updatedResume.getProjects());
-    existing.setCertifications(updatedResume.getCertifications());
-    existing.setSkills(updatedResume.getSkills());
-    existing.setLanguages(updatedResume.getLanguages());
-    existing.setUpdatedAt(LocalDateTime.now());
-    return resumeRepository.save(existing);
-}
+    @Override
+    public Resume updateResume(String id, Resume updatedResume, String email) {
+        Resume existing = getResumeById(id, email);
+        existing.setTitle(updatedResume.getTitle());
+        existing.setFullName(updatedResume.getFullName());
+        existing.setEmail(updatedResume.getEmail());
+        existing.setPhone(updatedResume.getPhone());
+        existing.setAddress(updatedResume.getAddress());
+        existing.setLinkedin(updatedResume.getLinkedin());
+        existing.setGithub(updatedResume.getGithub());
+        existing.setYoutube(updatedResume.getYoutube());
+        existing.setWebsite(updatedResume.getWebsite());
+        existing.setJobTitle(updatedResume.getJobTitle());
+        existing.setSummary(updatedResume.getSummary());
+        existing.setEducation(updatedResume.getEducation());
+        existing.setExperience(updatedResume.getExperience());
+        existing.setProjects(updatedResume.getProjects());
+        existing.setCertifications(updatedResume.getCertifications());
+        existing.setSkills(updatedResume.getSkills());
+        existing.setLanguages(updatedResume.getLanguages());
+        existing.setUpdatedAt(LocalDateTime.now());
+        return resumeRepository.save(existing);
+    }
 
     @Override
     public void deleteResume(String id, String email) {

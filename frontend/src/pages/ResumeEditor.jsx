@@ -33,6 +33,8 @@ const ResumeEditor = () => {
   const [saving, setSaving] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
+  const [theme, setTheme] = useState('classic')
+  const [showThemes, setShowThemes] = useState(false)
 
   useEffect(() => {
     if (id) fetchResume()
@@ -100,6 +102,12 @@ const ResumeEditor = () => {
     }
   }
 
+  const themes = [
+    { id: 'classic', label: '🎨 Classic', color: '#7C3AED' },
+    { id: 'modern', label: '✨ Modern', color: '#06B6D4' },
+    { id: 'executive', label: '💼 Executive', color: '#4ADE80' },
+  ]
+
   return (
     <div className="min-h-screen text-white" style={{ background: '#060816' }}>
       {/* Top accent */}
@@ -120,7 +128,9 @@ const ResumeEditor = () => {
           </button>
           <span className="text-white font-semibold text-sm hidden sm:block">{data.title || 'My Resume'}</span>
         </div>
+
         <div className="flex items-center gap-2">
+          {/* Mobile preview toggle */}
           <button
             onClick={() => setShowPreview(!showPreview)}
             className="text-xs px-3 py-2 rounded-xl transition-all md:hidden"
@@ -128,14 +138,51 @@ const ResumeEditor = () => {
           >
             {showPreview ? '📝 Edit' : '👁 Preview'}
           </button>
+
+          {/* Theme Selector */}
+          <div className="relative">
+            <button
+              onClick={() => setShowThemes(!showThemes)}
+              className="text-xs md:text-sm px-4 py-2 rounded-xl font-medium transition-all"
+              style={{ background: 'rgba(255,255,255,0.05)', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.1)' }}
+            >
+              🎨 Theme
+            </button>
+            {showThemes && (
+              <div
+                className="absolute right-0 top-11 z-50 rounded-2xl p-2 flex flex-col gap-1"
+                style={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', minWidth: '160px' }}
+              >
+                {themes.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => { setTheme(t.id); setShowThemes(false) }}
+                    className="px-4 py-2.5 rounded-xl text-sm text-left transition-all"
+                    style={theme === t.id
+                      ? { background: `${t.color}22`, color: t.color, border: `1px solid ${t.color}44` }
+                      : { color: '#94A3B8', background: 'transparent' }
+                    }
+                    onMouseEnter={e => { if (theme !== t.id) e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
+                    onMouseLeave={e => { if (theme !== t.id) e.currentTarget.style.background = 'transparent' }}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* PDF Download */}
           <button
             onClick={handleDownloadPDF}
             disabled={downloading}
             className="text-xs md:text-sm px-4 py-2 rounded-xl font-semibold transition-all disabled:opacity-60"
             style={{ background: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)' }}
           >
-            {downloading ? '⏳ Downloading...' : '⬇ PDF'}
+            {downloading ? '⏳...' : '⬇ PDF'}
           </button>
+
+          {/* Save */}
           <button
             onClick={handleSave}
             disabled={saving}
@@ -144,6 +191,8 @@ const ResumeEditor = () => {
           >
             {saving ? 'Saving...' : '💾 Save'}
           </button>
+
+          {/* Close */}
           <button
             onClick={() => navigate('/dashboard')}
             className="text-xs md:text-sm px-3 py-2 rounded-xl transition-all"
@@ -164,7 +213,7 @@ const ResumeEditor = () => {
         >
           {/* Steps */}
           <div
-            className="flex overflow-x-auto px-4 py-3 gap-1 md:flex"
+            className="flex overflow-x-auto px-4 py-3 gap-1"
             style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.06)', scrollbarWidth: 'none' }}
           >
             {steps.map((s, i) => (
@@ -223,9 +272,9 @@ const ResumeEditor = () => {
           </div>
         </div>
 
-        {/* Preview Panel — hidden on mobile unless toggled */}
+        {/* Mobile Preview */}
         <div
-          className="overflow-y-auto p-4 md:p-6"
+          className="overflow-y-auto p-4 md:hidden"
           style={{
             flex: 1,
             background: 'rgba(255,255,255,0.02)',
@@ -235,24 +284,14 @@ const ResumeEditor = () => {
         >
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm font-semibold text-white">Live Preview</span>
-            <div className="flex items-center gap-2">
-              <span className="text-xs px-3 py-1 rounded-full" style={{ background: 'rgba(124,58,237,0.15)', color: '#a78bfa' }}>
-                Auto-updating
-              </span>
-              <button
-                onClick={handleDownloadPDF}
-                disabled={downloading}
-                className="text-xs px-3 py-1.5 rounded-xl font-medium transition-all"
-                style={{ background: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)' }}
-              >
-                {downloading ? '⏳...' : '⬇ Download PDF'}
-              </button>
-            </div>
+            <span className="text-xs px-3 py-1 rounded-full" style={{ background: 'rgba(124,58,237,0.15)', color: '#a78bfa' }}>
+              {themes.find(t => t.id === theme)?.label}
+            </span>
           </div>
-          <ResumePreview data={data} />
+          <ResumePreview data={data} theme={theme} />
         </div>
 
-        {/* Desktop Preview — always visible */}
+        {/* Desktop Preview */}
         <div
           className="overflow-y-auto p-6 hidden md:block"
           style={{
@@ -265,7 +304,7 @@ const ResumeEditor = () => {
             <span className="text-sm font-semibold text-white">Live Preview</span>
             <div className="flex items-center gap-2">
               <span className="text-xs px-3 py-1 rounded-full" style={{ background: 'rgba(124,58,237,0.15)', color: '#a78bfa' }}>
-                Auto-updating
+                {themes.find(t => t.id === theme)?.label}
               </span>
               <button
                 onClick={handleDownloadPDF}
@@ -277,7 +316,7 @@ const ResumeEditor = () => {
               </button>
             </div>
           </div>
-          <ResumePreview data={data} />
+          <ResumePreview data={data} theme={theme} />
         </div>
       </div>
     </div>

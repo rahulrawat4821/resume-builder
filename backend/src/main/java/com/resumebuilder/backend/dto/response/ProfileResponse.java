@@ -9,11 +9,13 @@ public class ProfileResponse {
     private String address;
     private String profilePicture;
     private String plan;
+    private int resumesCreated;
 
     public ProfileResponse() {}
 
     public ProfileResponse(String id, String name, String email, String phone,
-                           String jobTitle, String address, String profilePicture, String plan) {
+                           String jobTitle, String address, String profilePicture,
+                           String plan, int resumesCreated) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -22,6 +24,7 @@ public class ProfileResponse {
         this.address = address;
         this.profilePicture = profilePicture;
         this.plan = plan;
+        this.resumesCreated = resumesCreated;
     }
 
     public String getId() { return id; }
@@ -40,4 +43,6 @@ public class ProfileResponse {
     public void setProfilePicture(String profilePicture) { this.profilePicture = profilePicture; }
     public String getPlan() { return plan; }
     public void setPlan(String plan) { this.plan = plan; }
+    public int getResumesCreated() { return resumesCreated; }
+    public void setResumesCreated(int resumesCreated) { this.resumesCreated = resumesCreated; }
 }

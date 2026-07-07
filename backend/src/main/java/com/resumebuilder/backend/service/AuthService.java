@@ -12,6 +12,7 @@ public interface AuthService {
     AuthResponse register(RegisterRequest request);
     AuthResponse verifyOtp(VerifyOtpRequest request);
     AuthResponse login(LoginRequest request);
+    AuthResponse resendOtp(String email);
 
 
 }

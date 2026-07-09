@@ -12,14 +12,26 @@ import com.resumebuilder.backend.dto.request.UpdateProfileRequest;
 import com.resumebuilder.backend.dto.response.ProfileResponse;
 import com.resumebuilder.backend.service.UserService;
 
+import com.resumebuilder.backend.service.CloudinaryService;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Map;
+
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+
+
 @RestController
 @RequestMapping("/user")
 public class UserController {
 
     private final UserService userService;
-
-    public UserController(UserService userService) {
+    private final CloudinaryService cloudinaryService;
+    public UserController(UserService userService , CloudinaryService cloudinaryService) {
         this.userService = userService;
+        this.cloudinaryService = cloudinaryService;
     }
 
     @GetMapping("/profile")
@@ -35,4 +47,20 @@ public class UserController {
         String email = authentication.getName();
         return ResponseEntity.ok(userService.updateProfile(email, request));
     }
+    
+     @PostMapping("/upload-photo")
+    public ResponseEntity<Map<String, String>> uploadPhoto(
+            @RequestParam("file") MultipartFile file,
+            Authentication authentication) {
+        String email = authentication.getName();
+
+        // Upload to Cloudinary
+        String imageUrl = cloudinaryService.uploadImage(file);
+
+        // Save URL to user profile
+        userService.updateProfilePhoto(email, imageUrl);
+
+        return ResponseEntity.ok(Map.of("profilePicture", imageUrl));
+    }
+
 }

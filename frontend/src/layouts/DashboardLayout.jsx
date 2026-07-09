@@ -1,12 +1,27 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import api from '../services/api'
 
 const DashboardLayout = ({ children }) => {
   const { logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [profile, setProfile] = useState(null)
+
+  useEffect(() => {
+    fetchProfile()
+  }, [])
+
+  const fetchProfile = async () => {
+    try {
+      const res = await api.get('/user/profile')
+      setProfile(res.data)
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
   const handleLogout = () => {
     logout()
@@ -40,7 +55,6 @@ const DashboardLayout = ({ children }) => {
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="text-xl text-gray-400 hover:text-white transition p-1"
-            aria-label="Toggle sidebar"
           >
             ☰
           </button>
@@ -59,24 +73,46 @@ const DashboardLayout = ({ children }) => {
         <div className="flex items-center gap-2 md:gap-3">
           <span
             className="px-3 py-1 rounded-full text-xs font-medium hidden sm:block"
-            style={{ background: 'rgba(124,58,237,0.15)', color: '#a78bfa', border: '1px solid rgba(124,58,237,0.3)' }}
+            style={profile?.plan === 'PREMIUM'
+              ? { background: 'rgba(250,204,21,0.15)', color: '#fbbf24', border: '1px solid rgba(250,204,21,0.3)' }
+              : { background: 'rgba(124,58,237,0.15)', color: '#a78bfa', border: '1px solid rgba(124,58,237,0.3)' }
+            }
           >
-            Free Plan
+            {profile?.plan === 'PREMIUM' ? '👑 Premium' : 'Free Plan'}
           </span>
-          <button
-            onClick={() => navigate('/pricing')}
-            className="px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all"
-            style={{ background: 'linear-gradient(135deg, #7C3AED, #2563EB)' }}
-            onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
-            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-          >
-            Upgrade
-          </button>
+
+          {profile?.plan !== 'PREMIUM' && (
+            <button
+              onClick={() => navigate('/pricing')}
+              className="px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all"
+              style={{ background: 'linear-gradient(135deg, #7C3AED, #2563EB)' }}
+              onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+            >
+              Upgrade
+            </button>
+          )}
+
+          {/* Profile Avatar */}
           <div
-            className="w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm"
-            style={{ background: 'linear-gradient(135deg, #7C3AED, #2563EB)' }}
+            className="w-9 h-9 rounded-full overflow-hidden cursor-pointer flex-shrink-0"
+            style={{ border: '2px solid rgba(124,58,237,0.5)' }}
+            onClick={() => navigate('/profile')}
           >
-            RR
+            {profile?.profilePicture ? (
+              <img
+                src={profile.profilePicture}
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div
+                className="w-full h-full flex items-center justify-center font-semibold text-sm"
+                style={{ background: 'linear-gradient(135deg, #7C3AED, #2563EB)' }}
+              >
+                {profile?.name?.charAt(0)?.toUpperCase() || 'U'}
+              </div>
+            )}
           </div>
         </div>
       </nav>
@@ -102,6 +138,31 @@ const DashboardLayout = ({ children }) => {
             borderRight: sidebarOpen ? '1px solid rgba(255,255,255,0.08)' : 'none',
           }}
         >
+          {/* Profile mini card in sidebar */}
+          {sidebarOpen && (
+            <div
+              className="flex items-center gap-3 px-3 py-3 rounded-2xl mb-4"
+              style={{ background: 'rgba(255,255,255,0.05)' }}
+            >
+              <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
+                {profile?.profilePicture ? (
+                  <img src={profile.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <div
+                    className="w-full h-full flex items-center justify-center font-semibold text-sm"
+                    style={{ background: 'linear-gradient(135deg, #7C3AED, #2563EB)' }}
+                  >
+                    {profile?.name?.charAt(0)?.toUpperCase() || 'U'}
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-medium text-white truncate">{profile?.name || 'User'}</div>
+                <div className="text-xs truncate" style={{ color: '#4B5563' }}>{profile?.plan === 'PREMIUM' ? '👑 Premium' : 'Free Plan'}</div>
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-col gap-1 flex-1 min-w-[210px]">
             {navItems.map((item) => {
               const active = location.pathname === item.path

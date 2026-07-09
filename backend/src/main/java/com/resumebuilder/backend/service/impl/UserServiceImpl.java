@@ -52,4 +52,11 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         return toProfileResponse(user);
     }
+
+    @Override
+public void updateProfilePhoto(String email, String imageUrl) {
+    User user = getUser(email);
+    user.setProfilePicture(imageUrl);
+    userRepository.save(user);
+}
 }

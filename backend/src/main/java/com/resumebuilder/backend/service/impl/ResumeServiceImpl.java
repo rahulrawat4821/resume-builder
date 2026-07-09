@@ -87,6 +87,7 @@ public Resume createResume(Resume resume, String email) {
         existing.setSkills(updatedResume.getSkills());
         existing.setLanguages(updatedResume.getLanguages());
         existing.setUpdatedAt(LocalDateTime.now());
+        existing.setProfilePhoto(updatedResume.getProfilePhoto());
         return resumeRepository.save(existing);
     }
 

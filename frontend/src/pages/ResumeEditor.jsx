@@ -15,8 +15,11 @@ const steps = ['Personal', 'Summary', 'Experience', 'Education', 'Skills', 'Proj
 const empty = {
   title: 'My Resume',
   fullName: '', email: '', phone: '', address: '',
-  linkedin: '', github: '', website: '', jobTitle: '',
+  linkedin: '', github: '',
+  website: '',
+  jobTitle: '',
   summary: '',
+  profilePhoto: '',
   experience: [],
   education: [],
   skills: [],
@@ -36,9 +39,23 @@ const ResumeEditor = () => {
   const [theme, setTheme] = useState('classic')
   const [showThemes, setShowThemes] = useState(false)
 
+  // ✅ Fixed useEffect
   useEffect(() => {
+    fetchProfilePhoto()
     if (id) fetchResume()
   }, [id])
+
+  // ✅ Auto load profile photo
+  const fetchProfilePhoto = async () => {
+    try {
+      const res = await api.get('/user/profile')
+      if (res.data.profilePicture) {
+        setData(prev => ({ ...prev, profilePhoto: res.data.profilePicture }))
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
   const fetchResume = async () => {
     try {
@@ -122,7 +139,7 @@ const ResumeEditor = () => {
           <button
             onClick={() => navigate('/dashboard')}
             className="text-sm px-3 py-1.5 rounded-lg transition-all"
-            style={{ color: '#94A3B8', background: 'rgba(255,255,255,0.05)' }}
+            style={{ color: '#94A3B8', background: 'rgba(255,255,255,0.05)', cursor: 'pointer' }}
           >
             ← Back
           </button>
@@ -134,7 +151,7 @@ const ResumeEditor = () => {
           <button
             onClick={() => setShowPreview(!showPreview)}
             className="text-xs px-3 py-2 rounded-xl transition-all md:hidden"
-            style={{ background: 'rgba(255,255,255,0.05)', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.1)' }}
+            style={{ background: 'rgba(255,255,255,0.05)', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
           >
             {showPreview ? '📝 Edit' : '👁 Preview'}
           </button>
@@ -144,7 +161,7 @@ const ResumeEditor = () => {
             <button
               onClick={() => setShowThemes(!showThemes)}
               className="text-xs md:text-sm px-4 py-2 rounded-xl font-medium transition-all"
-              style={{ background: 'rgba(255,255,255,0.05)', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.1)' }}
+              style={{ background: 'rgba(255,255,255,0.05)', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
             >
               🎨 Theme
             </button>
@@ -159,8 +176,8 @@ const ResumeEditor = () => {
                     onClick={() => { setTheme(t.id); setShowThemes(false) }}
                     className="px-4 py-2.5 rounded-xl text-sm text-left transition-all"
                     style={theme === t.id
-                      ? { background: `${t.color}22`, color: t.color, border: `1px solid ${t.color}44` }
-                      : { color: '#94A3B8', background: 'transparent' }
+                      ? { background: `${t.color}22`, color: t.color, border: `1px solid ${t.color}44`, cursor: 'pointer' }
+                      : { color: '#94A3B8', background: 'transparent', cursor: 'pointer' }
                     }
                     onMouseEnter={e => { if (theme !== t.id) e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
                     onMouseLeave={e => { if (theme !== t.id) e.currentTarget.style.background = 'transparent' }}
@@ -177,7 +194,7 @@ const ResumeEditor = () => {
             onClick={handleDownloadPDF}
             disabled={downloading}
             className="text-xs md:text-sm px-4 py-2 rounded-xl font-semibold transition-all disabled:opacity-60"
-            style={{ background: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)' }}
+            style={{ background: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', cursor: 'pointer' }}
           >
             {downloading ? '⏳...' : '⬇ PDF'}
           </button>
@@ -187,7 +204,7 @@ const ResumeEditor = () => {
             onClick={handleSave}
             disabled={saving}
             className="text-xs md:text-sm px-4 py-2 rounded-xl font-semibold transition-all disabled:opacity-60"
-            style={{ background: 'linear-gradient(135deg,#7C3AED,#2563EB)', color: 'white' }}
+            style={{ background: 'linear-gradient(135deg,#7C3AED,#2563EB)', color: 'white', cursor: 'pointer' }}
           >
             {saving ? 'Saving...' : '💾 Save'}
           </button>
@@ -196,7 +213,7 @@ const ResumeEditor = () => {
           <button
             onClick={() => navigate('/dashboard')}
             className="text-xs md:text-sm px-3 py-2 rounded-xl transition-all"
-            style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}
+            style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)', cursor: 'pointer' }}
           >
             ✕
           </button>
@@ -222,8 +239,8 @@ const ResumeEditor = () => {
                 onClick={() => setStep(i)}
                 className="px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all flex-shrink-0"
                 style={step === i
-                  ? { background: 'linear-gradient(135deg,#7C3AED,#2563EB)', color: 'white' }
-                  : { color: '#64748B' }
+                  ? { background: 'linear-gradient(135deg,#7C3AED,#2563EB)', color: 'white', cursor: 'pointer' }
+                  : { color: '#64748B', cursor: 'pointer' }
                 }
               >
                 {i < step ? '✓ ' : ''}{s}
@@ -246,7 +263,7 @@ const ResumeEditor = () => {
               onClick={() => setStep(s => Math.max(0, s - 1))}
               disabled={step === 0}
               className="px-4 py-2 rounded-xl text-sm transition-all disabled:opacity-30"
-              style={{ background: 'rgba(255,255,255,0.05)', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.08)' }}
+              style={{ background: 'rgba(255,255,255,0.05)', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}
             >
               ← Back
             </button>
@@ -255,7 +272,7 @@ const ResumeEditor = () => {
               <button
                 onClick={() => setStep(s => s + 1)}
                 className="px-4 py-2 rounded-xl text-sm font-medium transition-all"
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#2563EB)', color: 'white' }}
+                style={{ background: 'linear-gradient(135deg,#7C3AED,#2563EB)', color: 'white', cursor: 'pointer' }}
               >
                 Next →
               </button>
@@ -264,7 +281,7 @@ const ResumeEditor = () => {
                 onClick={handleSave}
                 disabled={saving}
                 className="px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-60"
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#2563EB)', color: 'white' }}
+                style={{ background: 'linear-gradient(135deg,#7C3AED,#2563EB)', color: 'white', cursor: 'pointer' }}
               >
                 {saving ? 'Saving...' : '💾 Save Resume'}
               </button>
@@ -310,7 +327,7 @@ const ResumeEditor = () => {
                 onClick={handleDownloadPDF}
                 disabled={downloading}
                 className="text-xs px-3 py-1.5 rounded-xl font-medium transition-all"
-                style={{ background: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)' }}
+                style={{ background: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', cursor: 'pointer' }}
               >
                 {downloading ? '⏳...' : '⬇ Download PDF'}
               </button>

@@ -26,6 +26,9 @@ public class Resume {
     private String website;
     private String jobTitle;
     private String summary;
+    private String profilePhoto;
+    
+
 
     private List<Education> education;
     private List<Experience> experience;
@@ -98,6 +101,7 @@ public class Resume {
         private String issuer;
         private String date;
         private String description;
+        private String link;
 
         public String getName() { return name; }
         public void setName(String name) { this.name = name; }
@@ -107,6 +111,8 @@ public class Resume {
         public void setDate(String date) { this.date = date; }
         public String getDescription() { return description; }
         public void setDescription(String description) { this.description = description; }
+        public String getLink() { return link; }
+         public void setLink(String link) { this.link = link; }
     }
 
     // ===== Getters and Setters =====
@@ -153,4 +159,6 @@ public class Resume {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public String getProfilePhoto() { return profilePhoto; }
+public void setProfilePhoto(String profilePhoto) { this.profilePhoto = profilePhoto; }
 }

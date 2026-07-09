@@ -1,5 +1,9 @@
 export const inputClass = "w-full px-4 py-3 rounded-xl text-sm text-white outline-none transition-all"
-export const inputStyle = { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }
+export const inputStyle = {
+  background: 'rgba(255,255,255,0.05)',
+  border: '1px solid rgba(255,255,255,0.1)',
+  cursor: 'text'
+}
 
 export const StyledInput = ({ label, ...props }) => (
   <div>

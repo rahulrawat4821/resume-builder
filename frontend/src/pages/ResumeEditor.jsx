@@ -34,40 +34,68 @@ const ResumeEditor = () => {
   const [step, setStep] = useState(0)
   const [data, setData] = useState(empty)
   const [saving, setSaving] = useState(false)
+  const [autoSaved, setAutoSaved] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
   const [theme, setTheme] = useState('classic')
   const [showThemes, setShowThemes] = useState(false)
 
-  // ✅ Fixed useEffect
+  // ✅ Restore draft from localStorage for new resumes
+  useEffect(() => {
+    if (!id) {
+      const draft = localStorage.getItem('resume_draft')
+      if (draft) {
+        try { setData(JSON.parse(draft)) } catch (e) { console.error(e) }
+      }
+    }
+  }, [])
+
   useEffect(() => {
     fetchProfilePhoto()
     if (id) fetchResume()
   }, [id])
 
-  // ✅ Auto load profile photo
+  // ✅ Save to localStorage on every change
+  useEffect(() => {
+    if (data.fullName || data.title !== 'My Resume') {
+      localStorage.setItem('resume_draft', JSON.stringify(data))
+    }
+  }, [data])
+
+  // ✅ Auto-save every 30 seconds
+  useEffect(() => {
+    if (!id) return
+    const interval = setInterval(() => { handleAutoSave() }, 30000)
+    return () => clearInterval(interval)
+  }, [data, id])
+
   const fetchProfilePhoto = async () => {
     try {
       const res = await api.get('/user/profile')
       if (res.data.profilePicture) {
         setData(prev => ({ ...prev, profilePhoto: res.data.profilePicture }))
       }
-    } catch (err) {
-      console.error(err)
-    }
+    } catch (err) { console.error(err) }
   }
 
   const fetchResume = async () => {
     try {
       const res = await api.get(`/resume/${id}`)
       setData({ ...empty, ...res.data })
-    } catch (err) {
-      console.error(err)
-    }
+    } catch (err) { console.error(err) }
   }
 
   const onChange = (field, value) => {
     setData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleAutoSave = async () => {
+    if (!id) return
+    try {
+      await api.put(`/resume/${id}`, data)
+      setAutoSaved(true)
+      setTimeout(() => setAutoSaved(false), 2000)
+    } catch (err) { console.error('Auto-save failed', err) }
   }
 
   const handleSave = async () => {
@@ -75,15 +103,15 @@ const ResumeEditor = () => {
     try {
       if (id) {
         await api.put(`/resume/${id}`, data)
+        setAutoSaved(true)
+        setTimeout(() => setAutoSaved(false), 2000)
       } else {
         const res = await api.post('/resume', data)
+        localStorage.removeItem('resume_draft')
         navigate(`/resume/edit/${res.data.id}`, { replace: true })
       }
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setSaving(false)
-    }
+    } catch (err) { console.error(err) }
+    finally { setSaving(false) }
   }
 
   const handleDownloadPDF = async () => {
@@ -99,11 +127,8 @@ const ResumeEditor = () => {
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       }
       await html2pdf().set(opt).from(element).save()
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setDownloading(false)
-    }
+    } catch (err) { console.error(err) }
+    finally { setDownloading(false) }
   }
 
   const renderStep = () => {
@@ -127,7 +152,6 @@ const ResumeEditor = () => {
 
   return (
     <div className="min-h-screen text-white" style={{ background: '#060816' }}>
-      {/* Top accent */}
       <div style={{ height: '3px', background: 'linear-gradient(90deg, #7C3AED, #2563EB)', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100 }} />
 
       {/* Navbar */}
@@ -143,7 +167,17 @@ const ResumeEditor = () => {
           >
             ← Back
           </button>
-          <span className="text-white font-semibold text-sm hidden sm:block">{data.title || 'My Resume'}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-white font-semibold text-sm hidden sm:block">
+              {data.title || 'My Resume'}
+            </span>
+            {autoSaved && (
+              <span className="text-xs px-2 py-0.5 rounded-full hidden sm:block"
+                style={{ background: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.2)' }}>
+                ✅ Saved
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -189,7 +223,6 @@ const ResumeEditor = () => {
             )}
           </div>
 
-          {/* PDF Download */}
           <button
             onClick={handleDownloadPDF}
             disabled={downloading}
@@ -199,7 +232,6 @@ const ResumeEditor = () => {
             {downloading ? '⏳...' : '⬇ PDF'}
           </button>
 
-          {/* Save */}
           <button
             onClick={handleSave}
             disabled={saving}
@@ -209,7 +241,6 @@ const ResumeEditor = () => {
             {saving ? 'Saving...' : '💾 Save'}
           </button>
 
-          {/* Close */}
           <button
             onClick={() => navigate('/dashboard')}
             className="text-xs md:text-sm px-3 py-2 rounded-xl transition-all"
@@ -223,99 +254,98 @@ const ResumeEditor = () => {
       {/* Content */}
       <div className="flex h-screen pt-[59px]">
 
-        {/* Form Panel */}
+        {/* ✅ Form Panel — uses visibility instead of width:0 */}
         <div
           className="flex flex-col overflow-hidden"
-          style={{ width: showPreview ? '0' : '100%' }}
+          style={{
+            width: '45%',
+            minWidth: '45%',
+            // ✅ On mobile: hide with display none (keeps component mounted)
+            // ✅ On desktop: always visible
+            display: 'flex',
+            flexDirection: 'column',
+          }}
         >
-          {/* Steps */}
+          {/* ✅ Mobile — hide form when preview is shown */}
           <div
-            className="flex overflow-x-auto px-4 py-3 gap-1"
-            style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.06)', scrollbarWidth: 'none' }}
+            style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}
+            className={showPreview ? 'hidden' : 'flex md:flex'}
           >
-            {steps.map((s, i) => (
-              <button
-                key={s}
-                onClick={() => setStep(i)}
-                className="px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all flex-shrink-0"
-                style={step === i
-                  ? { background: 'linear-gradient(135deg,#7C3AED,#2563EB)', color: 'white', cursor: 'pointer' }
-                  : { color: '#64748B', cursor: 'pointer' }
-                }
-              >
-                {i < step ? '✓ ' : ''}{s}
-              </button>
-            ))}
-          </div>
-
-          {/* Form Body */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-6">
-            <h2 className="text-lg font-bold text-white mb-5">{steps[step]}</h2>
-            {renderStep()}
-          </div>
-
-          {/* Navigation */}
-          <div
-            className="flex items-center justify-between px-4 md:px-6 py-4"
-            style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
-          >
-            <button
-              onClick={() => setStep(s => Math.max(0, s - 1))}
-              disabled={step === 0}
-              className="px-4 py-2 rounded-xl text-sm transition-all disabled:opacity-30"
-              style={{ background: 'rgba(255,255,255,0.05)', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}
+            {/* Steps */}
+            <div
+              className="flex overflow-x-auto px-4 py-3 gap-1"
+              style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.06)', scrollbarWidth: 'none' }}
             >
-              ← Back
-            </button>
-            <span className="text-xs" style={{ color: '#4B5563' }}>{step + 1} / {steps.length}</span>
-            {step < steps.length - 1 ? (
+              {steps.map((s, i) => (
+                <button
+                  key={s}
+                  onClick={() => setStep(i)}
+                  className="px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all flex-shrink-0"
+                  style={step === i
+                    ? { background: 'linear-gradient(135deg,#7C3AED,#2563EB)', color: 'white', cursor: 'pointer' }
+                    : { color: '#64748B', cursor: 'pointer' }
+                  }
+                >
+                  {i < step ? '✓ ' : ''}{s}
+                </button>
+              ))}
+            </div>
+
+            {/* Form Body */}
+            <div className="flex-1 overflow-y-auto p-4 md:p-6">
+              <h2 className="text-lg font-bold text-white mb-5">{steps[step]}</h2>
+              {renderStep()}
+            </div>
+
+            {/* Navigation */}
+            <div
+              className="flex items-center justify-between px-4 md:px-6 py-4"
+              style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+            >
               <button
-                onClick={() => setStep(s => s + 1)}
-                className="px-4 py-2 rounded-xl text-sm font-medium transition-all"
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#2563EB)', color: 'white', cursor: 'pointer' }}
+                onClick={() => setStep(s => Math.max(0, s - 1))}
+                disabled={step === 0}
+                className="px-4 py-2 rounded-xl text-sm transition-all disabled:opacity-30"
+                style={{ background: 'rgba(255,255,255,0.05)', color: '#94A3B8', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}
               >
-                Next →
+                ← Back
               </button>
-            ) : (
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-60"
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#2563EB)', color: 'white', cursor: 'pointer' }}
-              >
-                {saving ? 'Saving...' : '💾 Save Resume'}
-              </button>
-            )}
+              <span className="text-xs" style={{ color: '#4B5563' }}>{step + 1} / {steps.length}</span>
+              {step < steps.length - 1 ? (
+                <button
+                  onClick={() => setStep(s => s + 1)}
+                  className="px-4 py-2 rounded-xl text-sm font-medium transition-all"
+                  style={{ background: 'linear-gradient(135deg,#7C3AED,#2563EB)', color: 'white', cursor: 'pointer' }}
+                >
+                  Next →
+                </button>
+              ) : (
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-60"
+                  style={{ background: 'linear-gradient(135deg,#7C3AED,#2563EB)', color: 'white', cursor: 'pointer' }}
+                >
+                  {saving ? 'Saving...' : '💾 Save Resume'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Mobile Preview */}
+        {/* ✅ Preview Panel */}
         <div
-          className="overflow-y-auto p-4 md:hidden"
+          className="overflow-y-auto p-4 md:p-6"
           style={{
             flex: 1,
             background: 'rgba(255,255,255,0.02)',
             borderLeft: '1px solid rgba(255,255,255,0.06)',
+            // ✅ Mobile: show only when preview toggled
+            // ✅ Desktop: always visible
             display: showPreview ? 'block' : 'none',
           }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-semibold text-white">Live Preview</span>
-            <span className="text-xs px-3 py-1 rounded-full" style={{ background: 'rgba(124,58,237,0.15)', color: '#a78bfa' }}>
-              {themes.find(t => t.id === theme)?.label}
-            </span>
-          </div>
-          <ResumePreview data={data} theme={theme} />
-        </div>
-
-        {/* Desktop Preview */}
-        <div
-          className="overflow-y-auto p-6 hidden md:block"
-          style={{
-            width: '55%',
-            background: 'rgba(255,255,255,0.02)',
-            borderLeft: '1px solid rgba(255,255,255,0.06)',
-          }}
+          // ✅ Always show on desktop
+          ref={el => { if (el) { if (window.innerWidth >= 768) el.style.display = 'block' } }}
         >
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm font-semibold text-white">Live Preview</span>
@@ -329,12 +359,13 @@ const ResumeEditor = () => {
                 className="text-xs px-3 py-1.5 rounded-xl font-medium transition-all"
                 style={{ background: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', cursor: 'pointer' }}
               >
-                {downloading ? '⏳...' : '⬇ Download PDF'}
+                {downloading ? '⏳...' : '⬇ PDF'}
               </button>
             </div>
           </div>
           <ResumePreview data={data} theme={theme} />
         </div>
+
       </div>
     </div>
   )

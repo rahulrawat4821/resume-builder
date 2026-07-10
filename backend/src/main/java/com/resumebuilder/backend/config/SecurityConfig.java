@@ -32,7 +32,10 @@ public class SecurityConfig {
     @Bean
 public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
-    config.setAllowedOriginPatterns(List.of("*")); // ✅ allow all for now
+    config.setAllowedOriginPatterns(List.of(
+    "http://localhost:5173",
+    "https://resume-builder-ten-chi-15.vercel.app"
+));
     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
     config.setAllowedHeaders(List.of("*"));
     config.setAllowCredentials(true);
